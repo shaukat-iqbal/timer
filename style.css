@@ -1,0 +1,49 @@
+.duration {
+  font-size: 14px;
+}
+
+.logo {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  background-color: slateblue;
+  border-radius: 5px;
+}
+
+.remainingTime {
+  font-size: 26px;
+}
+
+.label {
+  font-size: 18px;
+}
+
+input[type="number"] {
+  width: 50px;
+}
+
+.group {
+  margin-right: 10px;
+  margin-bottom: 10px;
+  background: rgba(247, 244, 242, 0.3);
+}
+
+.card-header,
+.card-header h6 {
+  opacity: 1;
+}
+
+.timerContainer {
+  height: 100px;
+  width: 250px;
+}
+
+body {
+  min-width: vw-100;
+
+  box-sizing: border-box;
+  background-image: url("./Resources/stars.jpg");
+  background-attachment: fixed;
+  background-size: cover;
+}

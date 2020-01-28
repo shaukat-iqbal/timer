@@ -1,0 +1,188 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Multi Timer</title>
+
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+  <link href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet" />
+  <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+    integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous" />
+
+  <link rel="stylesheet" href="style.css">
+  <script src="./data.js"></script>
+  <script src="./options.js"></script>
+  <script src="./renderGroups.js"></script>
+  <script src="./helper.js"></script>
+  <script src="./timerCrud.js"></script>
+  <script src="./groupCrud.js"></script>
+
+  <script>
+    $(function () {
+
+      renderGroups(groups, timers);
+
+      // $("#closeModal").on("click", clearFields);
+      $("form").on("submit", e => {
+        e.preventDefault();
+        let timerId = $(this)
+          .find("input[name='timerId']")
+          .val();
+        let type = $(this)
+          .find("input[name='type']")
+          .val();
+        let groupId = $(this)
+          .find("input[name='groupId']")
+          .val();
+
+        let label = $(this)
+          .find("input[name='label']")
+          .val();
+        let hours = +$(this)
+          .find("input[name='hours']")
+          .val();
+        let minutes = +$(this)
+          .find("input[name='minutes']")
+          .val();
+        let seconds = +$(this)
+          .find("input[name='seconds']")
+          .val();
+
+        let duration = hours * 3600 + minutes * 60 + seconds;
+        if (type == "edit") {
+          updateTimer(timerId, label, duration);
+          return;
+        }
+        //Clear All fiels
+        clearFields();
+        let totalSeconds = duration;
+        let group = groups.find(g => g.id == groupId);
+        let d = new Date();
+        let startedAt = d.getTime();
+        let id = timers.length;
+        let newTimer = {
+          id: id,
+          label: label,
+          startedAt: startedAt,
+          duration: duration,
+          totalSeconds: totalSeconds,
+          status: "running"
+        };
+        console.log(newTimer);
+        group.timers.push(id);
+        timers.push(newTimer);
+        $("#addTimerModal").modal("hide");
+        addTimerToDom(newTimer, groupId);
+      });
+
+      function addTimerToDom(timer, groupId) {
+        let groupDiv = $("#" + groupId);
+        groupDiv.find("#placeholder").before(getTimerDiv(timer.id, groupId));
+        let newHeight = getGroupHeight(groupDiv);
+        groupDiv.css("height", newHeight);
+        groupDiv.find(".timerContainer").droppable(droppableOptions);
+        groupDiv.find(".timerContainer").draggable(draggableOptions);
+      }
+
+      $(".timerContainer").draggable(draggableOptions);
+      $(".timerContainer").droppable(droppableOptions);
+
+      $(".group").draggable(groupDraggableOptions);
+
+      $(".group").resizable(groupResizableOptions);
+
+      //Start Timers
+      setInterval(() => {
+        let labels = $(".timer .remainingTime");
+        let labelsArray = labels.toArray();
+        labelsArray.forEach(timer => {
+          if (timer.id == "running") {
+            let time =
+              timer.innerText !== "00:00:00"
+                ? decrement(timer.innerText)
+                : timer.innerText;
+            // if (time === "00:00:00") return;
+            timer.innerText = time;
+          }
+        });
+      }, 1000);
+    });
+  </script>
+</head>
+
+<body>
+  <header class="bg-dark">
+    <nav class="d-flex justify-content-between align-items-center">
+      <div class="d-inline-block logo my-1 ml-2 py-1 px-3 ">Multi Timer</div>
+      <button onclick="createGroupNextTo(null)" class="btn btn-primary m-2 " data-toggle="tooltip"
+        title="Add New Group"><i class="fa fa-plus"></i></button>
+    </nav>
+
+  </header>
+
+
+  <!-- Modal -->
+  <div class="modal fade" id="addTimerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title p-0 m-0" id="exampleModalLongTitle">
+            Timer Setting
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form action="#">
+          <div class="modal-body">
+            <input type="hidden" name="type" />
+            <input type="hidden" name="groupId" />
+            <input type="hidden" name="timerId" />
+            <div>
+              <label>Description</label><br />
+              <input type="text" name="label" minlength="2" required />
+            </div>
+
+            <label>Duration</label>
+            <br />
+            <div class="d-inline-block">
+              <input type="number" min="0" name="hours" /><br />
+              <label>Hours</label>
+            </div>
+            <div class="d-inline-block">
+              <input type="number" min="0" max="60" name="minutes" /><br />
+              <label>Mins</label>
+            </div>
+            <div class="d-inline-block">
+              <input type="number" min="0" max="60" name="seconds" /><br />
+              <label>Secs</label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button id="closeModal" type="button" class="btn btn-secondary" data-dismiss="modal">
+              Close
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Save changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row"></div>
+  </div>
+  <!-- Button trigger modal -->
+</body>
+
+</html>
